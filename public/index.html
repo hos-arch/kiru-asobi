@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>きる あそび</title>
+<style>
+:root{--bg:#f6eddc;--ink:#3a3326;--card:#fffaf0;--edge:rgba(90,64,40,.35);--gold:#f2c14e}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Yu Gothic",sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4vh;padding:7vh 5vw}
+#cue{width:min(62vw,30vh);aspect-ratio:1;background:var(--card);border-radius:24px;box-shadow:0 6px 18px rgba(90,64,40,.15);display:flex;align-items:center;justify-content:center}
+#cue svg,.card svg{width:92%;height:92%;display:block}
+#cards{display:grid;gap:4vw;width:min(92vw,120vh)}
+.card{background:var(--card);border-radius:20px;border:3px solid var(--edge);aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .25s,transform .2s}
+.card:active{transform:scale(.97)}
+.card.ok{border-color:var(--gold);box-shadow:0 0 0 6px rgba(242,193,78,.35)}
+.card.dim{opacity:.45}
+#star{position:fixed;left:50%;top:44%;width:26vmin;height:26vmin;margin:-13vmin;pointer-events:none;opacity:0;transform:scale(.4);transition:opacity .35s,transform .45s}
+#star.on{opacity:1;transform:scale(1)}
+#gear{position:fixed;top:12px;right:12px;width:44px;height:44px;border-radius:50%;border:2px solid var(--edge);background:rgba(255,250,240,.7);padding:0;cursor:pointer}
+#gear svg{width:100%;height:100%}
+#gear.hold{box-shadow:0 0 0 4px var(--gold)}
+#intro{position:fixed;inset:0;background:rgba(40,30,20,.4);display:flex;align-items:center;justify-content:center;padding:4vw}
+#intro.hide{display:none}
+#intro .card2{background:var(--bg);border-radius:20px;padding:22px;max-width:560px;max-height:90vh;overflow:auto;line-height:1.7;font-size:16px}
+#intro h1{font-size:20px;margin:0 0 8px}
+#intro h2{font-size:16px;margin:14px 0 4px}
+#intro ul,#intro ol{margin:0;padding-left:1.3em}
+.big{font:inherit;font-size:18px;padding:12px 18px;border-radius:14px;border:2px solid var(--edge);background:var(--card);color:var(--ink);margin-top:14px;cursor:pointer;width:100%}
+#panel{position:fixed;inset:0;background:rgba(40,30,20,.35);display:none;align-items:flex-end;justify-content:center}
+#panel.open{display:flex}
+#panel .sheet{background:var(--bg);width:min(96vw,560px);max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 18px 26px;box-sizing:border-box}
+#panel h1{font-size:20px;margin:0 0 6px}
+#panel h2{font-size:15px;margin:16px 0 6px}
+.note{font-size:13px;opacity:.8;margin:4px 0 0;line-height:1.6}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{font:inherit;font-size:16px;padding:10px 14px;border-radius:12px;border:2px solid var(--edge);background:var(--card);color:var(--ink);cursor:pointer}
+.opt[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.opt.wide{width:100%;text-align:center}
+.foot{display:flex;justify-content:space-between;margin-top:18px}
+#print{display:none}
+@media print{
+  #app,#gear,#intro,#panel,#star{display:none!important}
+  #print{display:block!important}
+  @page{size:A4;margin:0}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="cue" aria-label="手本の線"></div>
+  <div id="cards"></div>
+</div>
+
+<svg id="star" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,6 61,36 94,36 67,56 77,88 50,68 23,88 33,56 6,36 39,36" fill="#f2c14e" stroke="#8a6d4a" stroke-width="2"/></svg>
+
+<button id="gear" aria-label="支援者メニュー（長押し）" title="長押しで支援者メニュー">
+  <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="13" cy="22" r="3" fill="#3a3326"/><circle cx="22" cy="22" r="3" fill="#3a3326"/><circle cx="31" cy="22" r="3" fill="#3a3326"/></svg>
+</button>
+
+<div id="intro" role="dialog" aria-labelledby="introTitle">
+  <div class="card2">
+    <h1 id="introTitle">きる あそび（支援者用の説明）</h1>
+    <p>ハサミで切る練習のための遊びです。画面では、切る線を選ぶ練習をします。実際に切る練習は、印刷した台紙で、本物のハサミを使って行ってください。</p>
+    <h2>画面で行うこと</h2>
+    <p>上に出る「手本の線」と同じ線の紙を、指で選びます。合っていれば、星と音が出ます。違うときは、何も出ず、もう一度選べます。</p>
+    <h2>段階（本の順）</h2>
+    <ol>
+      <li>1回切り：まっすぐな線を、1回の開閉で切る。</li>
+      <li>連続切り：数回の開閉が必要な線を切る。</li>
+      <li>曲線・円：なだらかな曲線や円を切る。</li>
+      <li>紙を折る：半分まで折る。折り目と四隅の印を合わせる。</li>
+    </ol>
+    <h2>気をつけること</h2>
+    <ul>
+      <li>ハサミを持つ前に、大人が見本を示し、子どもがまねてみる。最初は、大人がハサミを開いて紙を挟んであげる。</li>
+      <li>紙は、カレンダーの紙などの、切りやすい固さのものを使う。1回切りの練習は、ストローや粘土でも行える。</li>
+      <li>紙の切り方は、画面では判定しない。大人が目で見て、次へ進むかを決める。</li>
+      <li>設定は、右上の点を1秒ほど長押しすると開きます。名前や記録は保存せず、カメラもマイクも使いません。</li>
+    </ul>
+    <button id="introBtn" class="big" type="button">はじめる</button>
+  </div>
+</div>
+
+<div id="panel" role="dialog" aria-modal="true" aria-labelledby="ptitle">
+  <div class="sheet">
+    <h1 id="ptitle">支援者メニュー</h1>
+    <p class="note">押すとすぐに変わります。名前や記録は保存しません。</p>
+
+    <h2>段階</h2>
+    <div class="opts">
+      <button class="opt" data-set="lv" data-v="1">1回切り</button>
+      <button class="opt" data-set="lv" data-v="2">連続切り</button>
+      <button class="opt" data-set="lv" data-v="3">曲線・円</button>
+      <button class="opt" data-set="lv" data-v="4">紙を折る</button>
+    </div>
+
+    <h2>選ぶ紙の数</h2>
+    <div class="opts">
+      <button class="opt" data-set="opt" data-v="2">2つ</button>
+      <button class="opt" data-set="opt" data-v="3">3つ</button>
+    </div>
+
+    <h2>台紙</h2>
+    <p class="note">いま選んでいる段階の台紙を、A4に3枚印刷します。</p>
+    <button id="printBtn" class="opt wide" type="button">台紙を印刷する</button>
+
+    <h2>くわしく</h2>
+    <button id="introAgainBtn" class="opt wide" type="button">説明をもう一度見る</button>
+
+    <div class="foot">
+      <button id="closeBtn" class="opt" type="button">とじる</button>
+    </div>
+  </div>
+</div>
+
+<div id="print" aria-hidden="true"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// ---- 設定（保存しない）----
+const S = { lv: 1, opt: 3 };
+const LEVELS = {
+  1: { name: '1回切り', cue: 'straight', correct: 'straight', distract: ['curve', 'zig'] },
+  2: { name: '連続切り', cue: 'many', correct: 'many', distract: ['few', 'one'] },
+  3: { name: '曲線・円', cue: 'circle', correct: 'circle', distract: ['curve', 'zig'] },
+  4: { name: '紙を折る', cue: 'diag', correct: 'diag', distract: ['horiz', 'vert'] }
+};
+
+// ---- 紙と線の絵（viewBox 100）----
+const D = 'stroke="#3a3326" stroke-width="2.6" stroke-dasharray="4 3" fill="none" stroke-linecap="round"';
+const vlines = xs => xs.map(x => `<path d="M${x} 22V78" ${D}/>`).join('');
+const SHAPE = {
+  straight: `<path d="M18 50H82" ${D}/>`,
+  curve: `<path d="M18 66Q50 18 82 66" ${D}/>`,
+  zig: `<path d="M18 72L38 30L60 72L82 30" ${D}/>`,
+  circle: `<circle cx="50" cy="50" r="26" ${D}/>`,
+  many: vlines([22, 34, 46, 58, 70, 82]),
+  few: vlines([34, 66]),
+  one: vlines([50]),
+  diag: `<path d="M12 12L88 88" ${D}/><circle cx="88" cy="12" r="3" fill="#3a3326"/><circle cx="12" cy="88" r="3" fill="#3a3326"/>`,
+  horiz: `<path d="M12 50H88" ${D}/>`,
+  vert: `<path d="M50 12V88" ${D}/>`
+};
+const paper = inner => `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="6" y="6" width="88" height="88" rx="4" fill="#fffdf6" stroke="#8a6d4a" stroke-width="1.6"/>${inner}</svg>`;
+
+// ---- 音（やわらかい）----
+let AC = null;
+function ensureAC(){ if (!AC){ try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (_){} } if (AC && AC.state === 'suspended') AC.resume(); }
+function ping(f, dur, vol){
+  if (!AC) return; const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+  o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + dur + 0.05);
+}
+
+// ---- 1回の問い ----
+let round = null, busy = false, count = 0;
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function newRound(){
+  const L = LEVELS[S.lv];
+  const d = shuffle(L.distract.slice()).slice(0, S.opt - 1);
+  round = { ans: L.correct, kinds: shuffle([L.correct, ...d]), done: false };
+  busy = false;
+  $('cue').innerHTML = paper(SHAPE[L.cue]);
+  $('cards').innerHTML = '';
+  $('cards').style.gridTemplateColumns = `repeat(${round.kinds.length}, 1fr)`;
+  round.kinds.forEach(k => {
+    const c = document.createElement('div');
+    c.className = 'card'; c.dataset.k = k; c.innerHTML = paper(SHAPE[k]);
+    c.addEventListener('click', () => choose(c));
+    $('cards').appendChild(c);
+  });
+}
+function choose(card){
+  if (busy || round.done || !card) return;
+  const k = card.dataset.k;
+  if (k === round.ans){
+    busy = true; round.done = true; card.classList.add('ok');
+    [...$('cards').children].forEach(c => { if (c !== card) c.classList.add('dim'); });
+    ping(784, 0.35, 0.12); setTimeout(() => ping(1047, 0.4, 0.1), 120);
+    const st = $('star'); st.classList.add('on'); setTimeout(() => st.classList.remove('on'), 900);
+    count++;
+    setTimeout(newRound, 1400);
+  } else {
+    // 違うとき：音も示しもしない。少し薄くして、すぐ選び直せるように戻す
+    card.classList.add('dim'); busy = true;
+    setTimeout(() => { card.classList.remove('dim'); busy = false; }, 500);
+  }
+}
+
+// ---- 台紙（印刷用）----
+const PX = 'stroke="#3a3326" stroke-width="0.35" stroke-dasharray="2.2 1.6" fill="none" stroke-linecap="round"';
+function sheetSVG(lv){
+  const parts = [];
+  const top = [22, 104, 186];
+  const label = `<text x="10" y="12" font-size="5" fill="#3a3326">きる あそび　台紙：${LEVELS[lv].name}（大人が切る練習に使う）</text>`;
+  parts.push(label);
+  if (lv === 1){
+    top.forEach(y => {
+      parts.push(`<rect x="12" y="${y}" width="170" height="52" fill="#fffdf6" stroke="#8a6d4a" stroke-width="0.4"/>`);
+      parts.push(`<path d="M97 ${y - 6}V${y + 58}" ${PX}/>`);
+    });
+  } else if (lv === 2){
+    top.forEach(y => {
+      parts.push(`<rect x="12" y="${y}" width="170" height="52" fill="#fffdf6" stroke="#8a6d4a" stroke-width="0.4"/>`);
+      for (let i = 1; i <= 7; i++){ const x = 12 + 170 * i / 8; parts.push(`<path d="M${x} ${y - 6}V${y + 58}" ${PX}/>`); }
+    });
+  } else if (lv === 3){
+    top.forEach((y, i) => {
+      parts.push(`<rect x="12" y="${y}" width="170" height="52" fill="#fffdf6" stroke="#8a6d4a" stroke-width="0.4"/>`);
+      if (i === 0) parts.push(`<path d="M24 ${y + 44}Q97 ${y - 14} 170 ${y + 44}" ${PX}/>`);
+      if (i === 1) parts.push(`<circle cx="97" cy="${y + 26}" r="20" ${PX}/>`);
+      if (i === 2) parts.push(`<path d="M24 ${y + 40}Q48 ${y + 6} 72 ${y + 40}T120 ${y + 40}T168 ${y + 40}" ${PX}/>`);
+    });
+  } else {
+    [[55, 16], [55, 100], [55, 184]].forEach(([x, y]) => {
+      parts.push(`<rect x="${x}" y="${y}" width="80" height="80" fill="#fffdf6" stroke="#8a6d4a" stroke-width="0.4"/>`);
+      parts.push(`<path d="M${x} ${y}L${x + 80} ${y + 80}" ${PX}/>`);
+      parts.push(`<circle cx="${x + 80}" cy="${y}" r="1.6" fill="#3a3326"/><circle cx="${x}" cy="${y + 80}" r="1.6" fill="#3a3326"/>`);
+    });
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 297" width="210mm" height="297mm">${parts.join('')}</svg>`;
+}
+function printSheet(){
+  $('print').innerHTML = sheetSVG(S.lv);
+  const after = () => { window.removeEventListener('afterprint', after); };
+  window.addEventListener('afterprint', after);
+  window.print();
+}
+
+// ---- 支援者メニュー（右上の点を1.2秒長押し）----
+const gear = $('gear');
+let holdTimer = null;
+function openPanel(){ $('panel').classList.add('open'); markOpts(); $('closeBtn').focus({ preventScroll: true }); }
+function closePanel(){ $('panel').classList.remove('open'); gear.focus(); }
+gear.addEventListener('pointerdown', e => { e.preventDefault(); gear.classList.add('hold'); holdTimer = setTimeout(() => { gear.classList.remove('hold'); openPanel(); }, 1200); });
+['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => gear.addEventListener(ev, () => { clearTimeout(holdTimer); gear.classList.remove('hold'); }));
+gear.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openPanel(); } });
+function markOpts(){
+  const cur = { lv: String(S.lv), opt: String(S.opt) };
+  document.querySelectorAll('#panel [data-set]').forEach(b => b.setAttribute('aria-pressed', String(cur[b.dataset.set] === b.dataset.v)));
+}
+$('panel').addEventListener('click', e => {
+  if (e.target === $('panel')){ closePanel(); return; }
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.set){
+    if (b.dataset.set === 'lv') S.lv = Number(b.dataset.v); else S.opt = Number(b.dataset.v);
+    markOpts(); newRound();
+  } else if (b.id === 'printBtn'){ closePanel(); printSheet(); }
+  else if (b.id === 'closeBtn') closePanel();
+  else if (b.id === 'introAgainBtn'){ closePanel(); $('intro').classList.remove('hide'); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('panel').classList.contains('open')) closePanel(); });
+
+$('introBtn').addEventListener('click', () => { ensureAC(); $('intro').classList.add('hide'); });
+document.addEventListener('pointerdown', ensureAC, { once: true });
+newRound();
+</script>
+</body>
+</html>
