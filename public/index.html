@@ -112,7 +112,8 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
   html,body{height:auto;overflow:visible;background:#fff}
   body > *{display:none !important}
   #print{display:block !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  #print svg{width:210mm;height:297mm;display:block}
+  #print{height:285mm;overflow:hidden}
+  #print svg{width:210mm;height:285mm;display:block}
   @page{size:A4;margin:0}
 }
 </style>
@@ -810,7 +811,7 @@ function sheetSVG(){
   o.push(`<text x="19" y="265" font-size="3.3" fill="#3a3326">大人の記入欄（アプリには記録しません）</text>`);
   o.push(`<text x="19" y="273" font-size="3.6" fill="#3a3326">できた　1枚目 ○　2枚目 ○　3枚目 ○</text>`);
   o.push(`<text x="19" y="279.5" font-size="3.6" fill="#3a3326">手助け　大・ふつう・小　　　日付　　　／</text>`);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 297" width="210mm" height="297mm" font-family="Hiragino Sans, Hiragino Kaku Gothic ProN, sans-serif">${o.join('')}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 297" width="210mm" height="285mm" font-family="Hiragino Sans, Hiragino Kaku Gothic ProN, sans-serif">${o.join('')}</svg>`;
 }
 const pdlg = $('pdlg');
 function openPrint(){ cancelAll(); $('pdlgName').textContent = sheetName(); pdlg.classList.remove('hide'); $('doPrintBtn').focus({ preventScroll: true }); }
