@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>きる あそび</title>
 <style>
-html,body{margin:0;height:100%;overflow:hidden;background:#f6eddc;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;width:100%;position:fixed;left:0;top:0;overflow:hidden;background:#f6eddc;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 canvas{display:block;width:100%;height:100%;touch-action:none}
 
 /* 支援者メニューを開く点（子どもからは目立たない） */
@@ -327,18 +327,22 @@ function makePaper(){
 }
 let ready = false;
 function resize(){
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
-  W = window.innerWidth; H = window.innerHeight;
+  // 画面の向きを変えた直後は、端末の報告する大きさが古いことがある。実際のキャンバスの大きさを測る
+  const r = cv.getBoundingClientRect();
+  const w = Math.round(r.width) || window.innerWidth, h = Math.round(r.height) || window.innerHeight, d = Math.min(window.devicePixelRatio || 1, 2);
+  if (w === W && h === H && d === DPR) return;
+  DPR = d; W = w; H = h;
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   U = Math.min(W, H);
   makePaper();
-  if (ready){
-    cancelAll(); const keep = inks.free; inks.free = null; resetScenes();
-    if (keep){ const n = mkInk(); n.x.drawImage(keep.c, 0, 0, keep.w, keep.h); inks.free = n; if (S.scene === 'free') INK = n; }
-  }
+  if (ready){ cancelAll(); resetScenes(); }
 }
-window.addEventListener('resize', resize);
+function resizeSoon(){ window.scrollTo(0, 0); resize(); setTimeout(resize, 150); setTimeout(resize, 500); setTimeout(resize, 1000); }
+window.addEventListener('resize', resizeSoon);
+window.addEventListener('orientationchange', resizeSoon);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resizeSoon);
+if (window.ResizeObserver) new ResizeObserver(() => resize()).observe(cv);
 resize();
 
 // ---- 設定（保存しない）----
